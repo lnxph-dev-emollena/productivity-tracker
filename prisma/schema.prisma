@@ -8,9 +8,9 @@ datasource db {
 }
 
 enum SourceType {
-  GitHub
-  GitLab
-  Bitbucket
+  github
+  gitlab
+  bitbucket
 }
 
 enum EventType {
