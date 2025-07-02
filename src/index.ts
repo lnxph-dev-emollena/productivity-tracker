@@ -15,15 +15,16 @@ app.get("/", (_req: Request, res: Response) => {
 app.post("/webhook", async (req: Request, res: Response) => {
   const event = req.headers["x-github-event"];
   const payload = req.body;
+  const source = "github"; // Assuming GitHub for now, can be extended later
 
-  if (event === "pull_request" && payload.action === "opened") {
-    console.log('this fired');
+  if (event !== "pull_request") return;
+
+  if (payload.action === "opened") {
     try {
       const pr = payload.pull_request;
       const repo = payload.repository;
 
       const branch = pr.head.ref || "unknown";
-      const createdAt = new Date(pr.created_at);
       const username = pr.user.login;
       const additions = pr.additions || 0;
       const deletions = pr.deletions || 0;
@@ -71,7 +72,7 @@ app.post("/webhook", async (req: Request, res: Response) => {
       });
 
       if (existingPR) {
-        console.log("⚠️ Duplicate PR. Skipping save.");
+        console.log("Duplicate PR. Skipping save.");
         res.status(200).send("Duplicate PR. Skipped.");
         return;
       }
@@ -87,9 +88,10 @@ app.post("/webhook", async (req: Request, res: Response) => {
           additions,
           deletions,
           changedFiles,
-          source: "github",
+          source,
           eventType: "opened",
           eventTimestamp: new Date(),
+          rawPayload: payload, // Store the raw payload for traceability
         },
       });
 
@@ -99,13 +101,17 @@ app.post("/webhook", async (req: Request, res: Response) => {
         ticket: ticketCode,
       });
 
-      res.status(200).send("Pull request recorded.");
+      res.status(200).send("Pull request opened event recorded.");
       return;
     } catch (error) {
-      console.error("Error saving PR:", error);
-      res.status(500).json({ error: "Failed to save pull request" });
+      console.error("Error saving PR opened event:", error);
+      res.status(500).json({ error: "Failed to save pull request opened event." });
       return;
     }
+  }
+
+  if (payload.action === "review_requested") {
+
   }
 
 
