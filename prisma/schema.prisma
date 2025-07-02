@@ -29,7 +29,7 @@ enum EventType {
 model Project {
   id                Int                @id @default(autoincrement())
   name              String             @unique
-  repository        String             @unique // GitHub repo URL or name
+  repository        String             @unique
   pullRequestEvents PullRequestEvent[]
 }
 
@@ -41,37 +41,38 @@ model User {
 
 model Ticket {
   id                Int                @id @default(autoincrement())
-  code              String             @unique // e.g. TICKET-123
+  code              String             @unique
   pullRequestEvents PullRequestEvent[]
 }
 
 model PullRequestEvent {
-  id Int @id @default(autoincrement())
-
-  project   Project? @relation(fields: [projectId], references: [id])
-  projectId Int?
-
-  author   User? @relation(fields: [authorId], references: [id])
-  authorId Int?
-
-  ticket   Ticket? @relation(fields: [ticketId], references: [id])
-  ticketId Int?
-
-  source SourceType
-
-  branch       String?
-  prNumber     Int?
-  additions    Int?
-  deletions    Int?
-  changedFiles Int?
-
+  id             Int                 @id @default(autoincrement())
+  project        Project?            @relation(fields: [projectId], references: [id])
+  projectId      Int?
+  author         User?               @relation(fields: [authorId], references: [id])
+  authorId       Int?
+  reviewer       String?
+  ticket         Ticket?             @relation(fields: [ticketId], references: [id])
+  ticketId       Int?
+  source         SourceType
+  branch         String?
+  prNumber       Int?
+  additions      Int?
+  deletions      Int?
+  changedFiles   Int?
   eventType      EventType
-  eventTimestamp DateTime  @default(now())
-
-  rawPayload Json? // Optional raw webhook data for traceability
+  eventTimestamp DateTime            @default(now())
+  payload        PullRequestPayload? @relation("EventPayload")
 
   @@index([projectId])
   @@index([authorId])
   @@index([ticketId])
   @@index([authorId, ticketId])
+}
+
+model PullRequestPayload {
+  id         Int              @id @default(autoincrement())
+  rawPayload Json
+  event      PullRequestEvent @relation("EventPayload", fields: [eventId], references: [id])
+  eventId    Int              @unique
 }

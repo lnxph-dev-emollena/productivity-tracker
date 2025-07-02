@@ -1,10 +1,33 @@
-export const resolveEntities = async (prisma: any, pr: any, repo: any) => {
-    const branch = pr.head?.ref || pr.ref || "unknown"; // fallback for push events
+import { PrismaClient, Project, User, Ticket } from '@prisma/client';
+
+interface Repo {
+    full_name: string;
+}
+
+interface PRLike {
+    head?: {
+        ref?: string;
+    };
+    ref?: string;
+    user?: {
+        login?: string;
+    };
+    sender?: {
+        login?: string;
+    };
+}
+
+export const resolveEntities = async (
+    prisma: PrismaClient,
+    pr: PRLike,
+    repo: Repo
+): Promise<{
+    user: User;
+    project: Project;
+    ticket: Ticket | null;
+}> => {
+    const branch = pr.head?.ref || pr.ref || "unknown";
     const username = pr.user?.login || pr.sender?.login;
-    const prNumber = pr.number;
-    const additions = pr.additions ?? 0;
-    const deletions = pr.deletions ?? 0;
-    const changedFiles = pr.changed_files ?? 0;
 
     const ticketCodeMatch = branch.match(/([A-Z]+-\d+)/i);
     const ticketCode = ticketCodeMatch ? ticketCodeMatch[1].toUpperCase() : null;
@@ -19,24 +42,16 @@ export const resolveEntities = async (prisma: any, pr: any, repo: any) => {
     });
     if (!user) throw new Error("User not found");
 
-    let ticket = null;
+    let ticket: Ticket | null = null;
     if (ticketCode) {
         ticket = await prisma.ticket.findUnique({
             where: { code: ticketCode },
         });
     }
 
-    const source = pr.url.includes("github") ? "github" : "unknown";
-
     return {
-        branch,
-        prNumber,
-        additions,
-        deletions,
-        changedFiles,
         project,
         user,
         ticket,
-        source
     };
-}
+};
