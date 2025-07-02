@@ -1,0 +1,148 @@
+[
+  {
+    "timestamp": "2025-07-02T04:41:29.483Z",
+    "payload": {
+      "object_kind": "merge_request",
+      "event_type": "merge_request",
+      "user": {
+        "id": 204,
+        "name": "Kevin Loquencio",
+        "username": "kevin_loquencio",
+        "avatar_url": "https://gitlab.lanexus.com/uploads/-/system/user/avatar/204/avatar.png",
+        "email": "[REDACTED]"
+      },
+      "project": {
+        "id": 1020,
+        "name": "dummy-prod-tracker",
+        "description": "",
+        "web_url": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker",
+        "avatar_url": null,
+        "git_ssh_url": "git@gitlab.lanexus.com:kevin_loquencio/dummy-prod-tracker.git",
+        "git_http_url": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker.git",
+        "namespace": "Kevin Loquencio",
+        "visibility_level": 0,
+        "path_with_namespace": "kevin_loquencio/dummy-prod-tracker",
+        "default_branch": "main",
+        "ci_config_path": "",
+        "homepage": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker",
+        "url": "git@gitlab.lanexus.com:kevin_loquencio/dummy-prod-tracker.git",
+        "ssh_url": "git@gitlab.lanexus.com:kevin_loquencio/dummy-prod-tracker.git",
+        "http_url": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker.git"
+      },
+      "object_attributes": {
+        "assignee_id": 194,
+        "author_id": 204,
+        "created_at": "2025-07-02 04:32:35 UTC",
+        "description": "",
+        "head_pipeline_id": null,
+        "id": 32766,
+        "iid": 2,
+        "last_edited_at": null,
+        "last_edited_by_id": null,
+        "merge_commit_sha": null,
+        "merge_error": null,
+        "merge_params": {
+          "force_remove_source_branch": "1"
+        },
+        "merge_status": "can_be_merged",
+        "merge_user_id": null,
+        "merge_when_pipeline_succeeds": false,
+        "milestone_id": null,
+        "source_branch": "dummy-ticket-001",
+        "source_project_id": 1020,
+        "state_id": 1,
+        "target_branch": "main",
+        "target_project_id": 1020,
+        "time_estimate": 0,
+        "title": "add fapapas",
+        "updated_at": "2025-07-02 04:41:26 UTC",
+        "updated_by_id": 204,
+        "url": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker/-/merge_requests/2",
+        "source": {
+          "id": 1020,
+          "name": "dummy-prod-tracker",
+          "description": "",
+          "web_url": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker",
+          "avatar_url": null,
+          "git_ssh_url": "git@gitlab.lanexus.com:kevin_loquencio/dummy-prod-tracker.git",
+          "git_http_url": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker.git",
+          "namespace": "Kevin Loquencio",
+          "visibility_level": 0,
+          "path_with_namespace": "kevin_loquencio/dummy-prod-tracker",
+          "default_branch": "main",
+          "ci_config_path": "",
+          "homepage": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker",
+          "url": "git@gitlab.lanexus.com:kevin_loquencio/dummy-prod-tracker.git",
+          "ssh_url": "git@gitlab.lanexus.com:kevin_loquencio/dummy-prod-tracker.git",
+          "http_url": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker.git"
+        },
+        "target": {
+          "id": 1020,
+          "name": "dummy-prod-tracker",
+          "description": "",
+          "web_url": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker",
+          "avatar_url": null,
+          "git_ssh_url": "git@gitlab.lanexus.com:kevin_loquencio/dummy-prod-tracker.git",
+          "git_http_url": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker.git",
+          "namespace": "Kevin Loquencio",
+          "visibility_level": 0,
+          "path_with_namespace": "kevin_loquencio/dummy-prod-tracker",
+          "default_branch": "main",
+          "ci_config_path": "",
+          "homepage": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker",
+          "url": "git@gitlab.lanexus.com:kevin_loquencio/dummy-prod-tracker.git",
+          "ssh_url": "git@gitlab.lanexus.com:kevin_loquencio/dummy-prod-tracker.git",
+          "http_url": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker.git"
+        },
+        "last_commit": {
+          "id": "d94c72efe678c218114acb0c9e33ba79f5123eba",
+          "message": "add fapapas\n",
+          "title": "add fapapas",
+          "timestamp": "2025-07-02T12:31:54+08:00",
+          "url": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker/-/commit/d94c72efe678c218114acb0c9e33ba79f5123eba",
+          "author": {
+            "name": "Kevin Loquencio",
+            "email": "kevin.loquencio@lanexcorp.com"
+          }
+        },
+        "work_in_progress": false,
+        "total_time_spent": 0,
+        "time_change": 0,
+        "human_total_time_spent": null,
+        "human_time_change": null,
+        "human_time_estimate": null,
+        "assignee_ids": [
+          194
+        ],
+        "state": "opened",
+        "action": "reopen"
+      },
+      "labels": [],
+      "changes": {
+        "state_id": {
+          "previous": 2,
+          "current": 1
+        },
+        "updated_at": {
+          "previous": "2025-07-02 04:40:53 UTC",
+          "current": "2025-07-02 04:41:26 UTC"
+        }
+      },
+      "repository": {
+        "name": "dummy-prod-tracker",
+        "url": "git@gitlab.lanexus.com:kevin_loquencio/dummy-prod-tracker.git",
+        "description": "",
+        "homepage": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker"
+      },
+      "assignees": [
+        {
+          "id": 194,
+          "name": " Ismael Gil Sanchez",
+          "username": "ismael.sanchez",
+          "avatar_url": "https://gitlab.lanexus.com/uploads/-/system/user/avatar/194/avatar.png",
+          "email": "[REDACTED]"
+        }
+      ]
+    }
+  }
+]

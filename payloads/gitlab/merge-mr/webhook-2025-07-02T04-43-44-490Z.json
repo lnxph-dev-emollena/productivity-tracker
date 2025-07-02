@@ -1,0 +1,83 @@
+[
+  {
+    "timestamp": "2025-07-02T04:43:44.492Z",
+    "payload": {
+      "object_kind": "push",
+      "event_name": "push",
+      "before": "72320de696b41ef7e222ff4cfe53df0576459972",
+      "after": "9bf28e3b35f8e817d34a6d3b06836131ae233c24",
+      "ref": "refs/heads/main",
+      "checkout_sha": "9bf28e3b35f8e817d34a6d3b06836131ae233c24",
+      "message": null,
+      "user_id": 204,
+      "user_name": "Kevin Loquencio",
+      "user_username": "kevin_loquencio",
+      "user_email": "",
+      "user_avatar": "https://gitlab.lanexus.com/uploads/-/system/user/avatar/204/avatar.png",
+      "project_id": 1020,
+      "project": {
+        "id": 1020,
+        "name": "dummy-prod-tracker",
+        "description": "",
+        "web_url": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker",
+        "avatar_url": null,
+        "git_ssh_url": "git@gitlab.lanexus.com:kevin_loquencio/dummy-prod-tracker.git",
+        "git_http_url": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker.git",
+        "namespace": "Kevin Loquencio",
+        "visibility_level": 0,
+        "path_with_namespace": "kevin_loquencio/dummy-prod-tracker",
+        "default_branch": "main",
+        "ci_config_path": "",
+        "homepage": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker",
+        "url": "git@gitlab.lanexus.com:kevin_loquencio/dummy-prod-tracker.git",
+        "ssh_url": "git@gitlab.lanexus.com:kevin_loquencio/dummy-prod-tracker.git",
+        "http_url": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker.git"
+      },
+      "commits": [
+        {
+          "id": "d94c72efe678c218114acb0c9e33ba79f5123eba",
+          "message": "add fapapas\n",
+          "title": "add fapapas",
+          "timestamp": "2025-07-02T12:31:54+08:00",
+          "url": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker/-/commit/d94c72efe678c218114acb0c9e33ba79f5123eba",
+          "author": {
+            "name": "Kevin Loquencio",
+            "email": "kevin.loquencio@lanexcorp.com"
+          },
+          "added": [
+            "fafapaps.php"
+          ],
+          "modified": [],
+          "removed": []
+        },
+        {
+          "id": "9bf28e3b35f8e817d34a6d3b06836131ae233c24",
+          "message": "Merge branch 'dummy-ticket-001' into 'main'\n\nadd fapapas\n\nSee merge request kevin_loquencio/dummy-prod-tracker!2",
+          "title": "Merge branch 'dummy-ticket-001' into 'main'",
+          "timestamp": "2025-07-02T04:43:38+00:00",
+          "url": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker/-/commit/9bf28e3b35f8e817d34a6d3b06836131ae233c24",
+          "author": {
+            "name": "Kevin Loquencio",
+            "email": "kevin.loquencio@lanexus.com"
+          },
+          "added": [
+            "fafapaps.php"
+          ],
+          "modified": [],
+          "removed": []
+        }
+      ],
+      "total_commits_count": 2,
+      "push_options": {},
+      "repository": {
+        "name": "dummy-prod-tracker",
+        "url": "git@gitlab.lanexus.com:kevin_loquencio/dummy-prod-tracker.git",
+        "description": "",
+        "homepage": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker",
+        "git_http_url": "https://gitlab.lanexus.com/kevin_loquencio/dummy-prod-tracker.git",
+        "git_ssh_url": "git@gitlab.lanexus.com:kevin_loquencio/dummy-prod-tracker.git",
+        "visibility_level": 0
+      }
+    }
+  }
+]
