@@ -8,25 +8,31 @@ datasource db {
 }
 
 model Project {
-  id           Int           @id @default(autoincrement())
-  name         String        @unique
-  repository   String        @unique // GitHub repo URL or name
-  pullRequests PullRequest[]
+  id           Int                @id @default(autoincrement())
+  name         String             @unique
+  repository   String             @unique // GitHub repo URL or name
+  pullRequests PullRequestEvent[]
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
-  username     String        @unique
-  pullRequests PullRequest[]
+  id           Int                @id @default(autoincrement())
+  username     String             @unique
+  pullRequests PullRequestEvent[]
 }
 
 model Ticket {
-  id           Int           @id @default(autoincrement())
-  code         String        @unique // e.g. TICKET-123
-  pullRequests PullRequest[]
+  id           Int                @id @default(autoincrement())
+  code         String             @unique // e.g. TICKET-123
+  pullRequests PullRequestEvent[]
 }
 
-model PullRequest {
+model Source {
+  id          Int                @id @default(autoincrement())
+  name        String             @unique
+  PullRequest PullRequestEvent[]
+}
+
+model PullRequestEvent {
   id        Int     @id @default(autoincrement())
   project   Project @relation(fields: [projectId], references: [id])
   projectId Int
@@ -37,10 +43,18 @@ model PullRequest {
   ticket   Ticket? @relation(fields: [ticketId], references: [id])
   ticketId Int?
 
-  branch       String
-  createdAt    DateTime
-  prNumber     Int
+  source   Source @relation(fields: [sourceId], references: [id])
+  sourceId Int
+
+  branch   String
+  prNumber Int
+
   additions    Int
   deletions    Int
   changedFiles Int
+
+  eventType      String
+  eventTimestamp DateTime
 }
+
+// opened | merged | closed | review_requested | changes_requested | pushed | resolved | unresolved | dismissed | approved
