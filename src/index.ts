@@ -268,6 +268,7 @@ app.post("/webhook", async (req: Request, res: Response) => {
           projectId: project.id,
           authorId: user.id,
           ticketId: ticket?.id ?? null,
+          reviewer: payload.sender.login,
           eventType: "approved",
           eventTimestamp: new Date(),
           payload: {
