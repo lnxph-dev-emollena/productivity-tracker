@@ -19,7 +19,10 @@ app.post("/webhook", async (req: Request, res: Response) => {
   const source = "github"; // Assuming GitHub for now, can be extended later
 
 
-  if (event !== "pull_request" && event !== "pull_request_review" && event !== 'pull_request_review_thread') return;
+  if (event !== "pull_request" && event !== "pull_request_review" && event !== "pull_request_review_thread") {
+    res.status(200).send("Event ignored");
+    return;
+  }
 
   if (payload.action === "opened") {
     try {
