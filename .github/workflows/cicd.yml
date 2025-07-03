@@ -62,10 +62,10 @@ jobs:
             cd "/home/ubuntu/app"
 
             echo "Cleaning up old containers..."
-            docker compose down || true
+            docker-compose down || true
 
             echo "Starting containers (includes Prisma migration)..."
-            docker compose up -d --remove-orphans
+            docker-compose up -d --remove-orphans
 
             echo "Cleaning up unused Docker images..."
             docker image prune -a -f
