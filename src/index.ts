@@ -18,7 +18,6 @@ app.post("/webhook", async (req: Request, res: Response) => {
   const payload = req.body;
   const source = "github"; // Assuming GitHub for now, can be extended later
 
-  console.log('event', event);
 
   if (event !== "pull_request" && event !== "pull_request_review" && event !== 'pull_request_review_thread') return;
 
@@ -124,7 +123,6 @@ app.post("/webhook", async (req: Request, res: Response) => {
       const pr = payload.pull_request;
       const repo = payload.repository;
 
-      console.log("HERE");
       const {
         project,
         user,
