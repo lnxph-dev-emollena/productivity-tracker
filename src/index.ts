@@ -36,8 +36,17 @@ app.post("/webhook", async (req: Request, res: Response) => {
       const changedFiles = pr.changed_files || 0;
       const prNumber = pr.number;
 
-      const ticketCodeMatch = branch.match(/([A-Z]+-\d+)/i);
-      const ticketCode = ticketCodeMatch ? ticketCodeMatch[1].toUpperCase() : null;
+      let ticketCode: string | null = null;
+      const parts = branch.split("/");
+
+      if (parts.length > 1) {
+        const subParts = parts[1].split("-");
+        if (subParts.length >= 2) {
+          ticketCode = `${subParts[0]}-${subParts[1]}`;
+        } else if (subParts.length === 1) {
+          ticketCode = subParts[0];
+        }
+      }
 
       // 1. Find or create the project
       const project = await prisma.project.upsert({
