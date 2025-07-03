@@ -1,0 +1,17 @@
+services:
+  migrate:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/dev/productivity-tracker:${IMAGE_TAG}
+    env_file:
+      - .env
+    command: npx prisma migrate deploy
+    restart: "no"
+
+  productivity-tracker:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/dev/productivity-tracker:${IMAGE_TAG}
+    env_file:
+      - .env
+    depends_on:
+      - migrate
+    ports:
+      - '80:8000'
+    restart: unless-stopped
