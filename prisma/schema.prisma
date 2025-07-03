@@ -31,6 +31,7 @@ model Project {
   name              String             @unique
   repository        String             @unique
   pullRequestEvents PullRequestEvent[]
+  tickets           Ticket[]
 }
 
 model User {
@@ -43,6 +44,8 @@ model Ticket {
   id                Int                @id @default(autoincrement())
   code              String             @unique
   pullRequestEvents PullRequestEvent[]
+  projectId         Int
+  project           Project            @relation(fields: [projectId], references: [id])
 }
 
 model PullRequestEvent {

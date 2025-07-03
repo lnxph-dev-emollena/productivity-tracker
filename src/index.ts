@@ -62,7 +62,7 @@ app.post("/webhook", async (req: Request, res: Response) => {
         ticket = await prisma.ticket.upsert({
           where: { code: ticketCode },
           update: {},
-          create: { code: ticketCode },
+          create: { code: ticketCode, projectId: project.id },
         });
       }
 
