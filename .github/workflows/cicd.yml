@@ -49,7 +49,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "docker-compose.yml,.env"
-          target: "/app"
+          target: "/home/ubuntu/app"
 
       - name: Deploy on EC2 via SSH
         uses: appleboy/ssh-action@v1.2.2
@@ -59,7 +59,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-            cd /app
+            cd "/home/ubuntu/app"
 
             echo "Cleaning up old containers..."
             docker compose down || true
