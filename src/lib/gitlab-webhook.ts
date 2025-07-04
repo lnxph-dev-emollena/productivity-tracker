@@ -29,9 +29,9 @@ const GITLAB_SOURCE = 'gitlab';
 const GITLAB_API_URL = process.env.GITLAB_HOST || 'https://gitlab.lanexus.com/api/v4';
 const PRIVATE_TOKEN = process.env.GITLAB_PRIVATE_TOKEN || '9aBoc95g-vWi4ssjjj4d';
 
-export const getMrID = async (projectId: string, branchName: string): Promise<number | null> => {
+export const getMrID = async (repositoryId: string, branchName: string): Promise<number | null> => {
   try {
-    const { data } = await axios.get(`${GITLAB_API_URL}/projects/${projectId}/merge_requests`, {
+    const { data } = await axios.get(`${GITLAB_API_URL}/projects/${repositoryId}/merge_requests`, {
       headers: { 'PRIVATE-TOKEN': PRIVATE_TOKEN },
       params: {
         state: 'opened',
@@ -46,9 +46,9 @@ export const getMrID = async (projectId: string, branchName: string): Promise<nu
   }
 };
 
-const fetchMRStats = async (projectId: string, mrIid: string): Promise<MergeRequestStats | null> => {
+const fetchMRStats = async (repositoryId: string, mrIid: string): Promise<MergeRequestStats | null> => {
   try {
-    const response: any = await getMergeRequest(projectId, mrIid);
+    const response: any = await getMergeRequest(repositoryId, mrIid);
     const changes = response.changes;
     let totalAdded = 0;
     let totalRemoved = 0;
@@ -77,8 +77,8 @@ const fetchMRStats = async (projectId: string, mrIid: string): Promise<MergeRequ
   }
 }
 
-const getMergeRequest = async (projectId: string, mrIid: string): Promise<MergeRequestStats | null> => {
-  const url = `${GITLAB_API_URL}/projects/${projectId}/merge_requests/${mrIid}/changes`;
+const getMergeRequest = async (repositoryId: string, mrIid: string): Promise<any> => {
+  const url = `${GITLAB_API_URL}/projects/${repositoryId}/merge_requests/${mrIid}/changes`;
 
   try {
     const response = await axios.get(url, {
@@ -99,7 +99,7 @@ export const GitlabWeebhook = (payload: any) => {
 
   const prisma = new PrismaClient();
   const eventType = payload.event_type ?? payload.event_name;
-  let projectId = payload.project.id;
+  let repositoryId = payload.project.id;
   let mrStats: MergeRequestStats | null = null;
   let mrId: any = null;
 
@@ -110,13 +110,13 @@ export const GitlabWeebhook = (payload: any) => {
       } else if (eventType == GitlabWeebhookEventType.PUSH) {
         const branchName = getBranchName();
         // Get the merge request id
-        mrId = await getMrID(projectId, branchName);
+        mrId = await getMrID(repositoryId, branchName);
       } else if (eventType == GitlabWeebhookEventType.NOTE) {
         mrId = payload?.merge_request?.iid;
       }
 
       // Get MR Stats
-      mrStats = await fetchMRStats(projectId, mrId);
+      mrStats = await fetchMRStats(repositoryId, mrId);
 
       if (eventType == GitlabWeebhookEventType.MERGE_REQUEST) {
         // PROJECTS, USER, TICKET WILL BE CREATED ONLY DURING OPENING MERGE REQUEST
@@ -148,9 +148,11 @@ export const GitlabWeebhook = (payload: any) => {
               true
             );
           } else if (['close', 'reopen'].includes(payload?.object_attributes.action)) {
+            const reviewerId = await getReviewerId(payload?.user?.username);
             const action = payload?.object_attributes.action == 'close' ?
               WebhookDatabaseEventType.DISMISSED :
               WebhookDatabaseEventType.REOPEN;
+
             await storeMergeRequestEvent(
               mrId,
               user,
@@ -159,38 +161,40 @@ export const GitlabWeebhook = (payload: any) => {
               getBranchName(),
               mrStats,
               action,
-              getReviewerUsername(),
+              reviewerId,
               true // Always create
             );
+
           } else if (['approved', 'unapproved'].includes(payload?.object_attributes.action)) {
 
+            const { authorUser } = await resolveMergeRequest(repositoryId, mrId);
+            const reviewerId = await getReviewerId(payload?.user?.username);
             const action = payload?.object_attributes.action == 'approved' ?
               WebhookDatabaseEventType.APPROVED :
               WebhookDatabaseEventType.UNAPPROVED;
 
-            await storeMergeRequestEvent(
-              mrId,
-              user,
-              ticket,
-              project,
-              getBranchName(),
-              mrStats,
-              action,
-              getReviewerUsername(),
-              true // Always create
-            );
+            if (authorUser) {
+              await storeMergeRequestEvent(
+                mrId,
+                authorUser,
+                ticket,
+                project,
+                getBranchName(),
+                mrStats,
+                action,
+                reviewerId,
+                true // Always create
+              );
+            }
+
           } else if (payload?.object_attributes.action == 'update') {
 
             // Get Merge request to validate revisions
-            const mergeRequest: any = await getMergeRequest(projectId, mrId);
+            const mergeRequest: any = await getMergeRequest(repositoryId, mrId);
+            const reviewer = mergeRequest && mergeRequest.reviewers.length !== 0 ? mergeRequest.reviewers[0].username : null;
+            const reviewerId = await getReviewerId(reviewer);
 
-            // Validate and store revision
-            // When a commit has been pushed with an active change request it should record a new revision
-            if (mergeRequest && !mergeRequest.blocking_discussions_resolved) {
-
-            }
-
-            await storeMergeRequestEvent(
+            const mergeRequestEvent = await storeMergeRequestEvent(
               mrId,
               user,
               ticket,
@@ -198,26 +202,39 @@ export const GitlabWeebhook = (payload: any) => {
               getBranchName(),
               mrStats,
               WebhookDatabaseEventType.PUSHED,
-              null,
+              reviewerId,
               true
-
             );
+
+            // Validate and store revision
+            // When a commit has been pushed with an active change request it should record a new revision
+            if (mergeRequest && !mergeRequest.blocking_discussions_resolved) {
+              await prisma.revision.create({
+                data: {
+                  prEventId: mergeRequestEvent.id,
+                  reviewerId: reviewerId ?? 0
+                },
+              });
+            }
           }
         }
 
         return true;
       } else if (eventType == GitlabWeebhookEventType.NOTE) {
-        const { project, user, ticket } = await resolveEntities();
-        if (mrStats && ticket && project && user && isChangeRequest()) {
+
+        const { authorUser } = await resolveMergeRequest(repositoryId, payload?.merge_request?.iid);
+        const { project, ticket } = await resolveEntities();
+        if (mrStats && ticket && project && authorUser && isChangeRequest()) {
+          const reviewerId = await getReviewerId(payload?.user?.username);
           await storeMergeRequestEvent(
             mrId,
-            user,
+            authorUser,
             ticket,
             project,
             getBranchName(),
             mrStats,
             WebhookDatabaseEventType.CHANGES_REQUESTED,
-            getReviewerUsername(),
+            reviewerId,
             true
           )
         }
@@ -278,7 +295,7 @@ export const GitlabWeebhook = (payload: any) => {
     branch: string,
     mrStats: MergeRequestStats,
     eventType: any,
-    reviewerUsername: any = null,
+    reviewerId: any = null,
     createAlways: boolean = false) {
 
     // Check for existing pull request from same author/project/ticket
@@ -298,7 +315,7 @@ export const GitlabWeebhook = (payload: any) => {
           authorId: user.id,
           ticketId: ticket?.id ?? null,
           branch,
-          reviewer: reviewerUsername,
+          reviewerId,
           prNumber: mergeRequestId,
           additions: mrStats.addition,
           deletions: mrStats.deletions,
@@ -339,8 +356,11 @@ export const GitlabWeebhook = (payload: any) => {
     return branch;
   }
 
-  function getReviewerUsername() {
-    return payload?.user?.username;
+  async function getReviewerId(username: any) {
+    const reviewer = await prisma.user.findUnique({
+      where: { username },
+    });
+    return reviewer ? reviewer.id : null;
   }
 
   function isChangeRequest() {
@@ -381,6 +401,18 @@ export const GitlabWeebhook = (payload: any) => {
     return branch;
   }
 
+  async function resolveMergeRequest(projectId: any, mergeRequestId: any): Promise<{ authorUser: User | null, mergeRequest: any }> {
+    const mergeRequest = await getMergeRequest(projectId, mergeRequestId);
+    const authorUser = await prisma.user.findUnique({
+      where: { username: mergeRequest?.author?.username },
+    });
+
+    return {
+      authorUser,
+      mergeRequest,
+    }
+  }
+
   async function resolveEntities(): Promise<{
     user: User;
     project: Project;
@@ -397,8 +429,10 @@ export const GitlabWeebhook = (payload: any) => {
 
     if (!project) throw new Error("Project not found");
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.upsert({
       where: { username },
+      update: {},
+      create: { username },
     });
 
     if (!user) throw new Error("User not found");
