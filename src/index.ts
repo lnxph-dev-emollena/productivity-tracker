@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import { PrismaClient, Prisma } from "@prisma/client";
 import { resolveEntities } from "./lib/helper";
+import { GitlabWeebhook } from "./lib/gitlab-webhook";
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -12,6 +13,20 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/", (_req: Request, res: Response) => {
   res.send("Workflow Insight API is running!");
 });
+
+
+app.post("/webhook/gitlab", async (req: Request, res: Response) => {
+ 
+  const webhook = GitlabWeebhook(req.body);
+
+  await webhook.save();
+
+  res.status(200).send("Pull request opened event recorded.");
+
+  return;
+
+});
+
 
 app.post("/webhook", async (req: Request, res: Response) => {
   const event = req.headers["x-github-event"];

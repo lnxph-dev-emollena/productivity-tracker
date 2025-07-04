@@ -23,6 +23,8 @@ enum EventType {
   unresolved
   dismissed
   approved
+  unapproved
+  reopen
 }
 
 model Project {
