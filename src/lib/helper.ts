@@ -55,3 +55,19 @@ export const resolveEntities = async (
         ticket,
     };
 };
+
+
+export const countAddedRemovedLines = (diffText: String)  => {
+  const lines = diffText.split('\n');
+  let added = 0, removed = 0;
+
+  for (let line of lines) {
+    if (line.startsWith('+') && !line.startsWith('+++')) {
+      added++;
+    } else if (line.startsWith('-') && !line.startsWith('---')) {
+      removed++;
+    }
+  }
+
+  return { added, removed, total: added + removed };
+}
