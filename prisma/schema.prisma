@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
+  url      = "mysql://root:my-secret-pw@127.0.0.1:3306/test_db"
 }
 
 enum SourceType {
@@ -23,6 +23,8 @@ enum EventType {
   unresolved
   dismissed
   approved
+  unapproved
+  reopen
 }
 
 model Project {
