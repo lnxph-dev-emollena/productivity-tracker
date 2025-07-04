@@ -33,7 +33,7 @@ CREATE TABLE `PullRequestEvent` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `projectId` INTEGER NULL,
     `authorId` INTEGER NULL,
-    `reviewer` VARCHAR(191) NULL,
+    `reviewerId` INTEGER NULL,
     `ticketId` INTEGER NULL,
     `source` ENUM('github', 'gitlab', 'bitbucket') NOT NULL,
     `branch` VARCHAR(191) NULL,
@@ -65,9 +65,10 @@ CREATE TABLE `PullRequestPayload` (
 CREATE TABLE `Revision` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `prEventId` INTEGER NOT NULL,
-    `reviewer` VARCHAR(191) NOT NULL,
+    `reviewerId` INTEGER NOT NULL,
 
     INDEX `Revision_prEventId_idx`(`prEventId`),
+    INDEX `Revision_reviewerId_idx`(`reviewerId`),
     UNIQUE INDEX `Revision_prEventId_key`(`prEventId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -82,6 +83,9 @@ ALTER TABLE `PullRequestEvent` ADD CONSTRAINT `PullRequestEvent_projectId_fkey` 
 ALTER TABLE `PullRequestEvent` ADD CONSTRAINT `PullRequestEvent_authorId_fkey` FOREIGN KEY (`authorId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `PullRequestEvent` ADD CONSTRAINT `PullRequestEvent_reviewerId_fkey` FOREIGN KEY (`reviewerId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `PullRequestEvent` ADD CONSTRAINT `PullRequestEvent_ticketId_fkey` FOREIGN KEY (`ticketId`) REFERENCES `Ticket`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -89,3 +93,6 @@ ALTER TABLE `PullRequestPayload` ADD CONSTRAINT `PullRequestPayload_eventId_fkey
 
 -- AddForeignKey
 ALTER TABLE `Revision` ADD CONSTRAINT `Revision_prEventId_fkey` FOREIGN KEY (`prEventId`) REFERENCES `PullRequestEvent`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Revision` ADD CONSTRAINT `Revision_reviewerId_fkey` FOREIGN KEY (`reviewerId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
