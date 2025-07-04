@@ -22,6 +22,7 @@ CREATE TABLE `User` (
 CREATE TABLE `Ticket` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `code` VARCHAR(191) NOT NULL,
+    `projectId` INTEGER NOT NULL,
 
     UNIQUE INDEX `Ticket_code_key`(`code`),
     PRIMARY KEY (`id`)
@@ -40,7 +41,7 @@ CREATE TABLE `PullRequestEvent` (
     `additions` INTEGER NULL,
     `deletions` INTEGER NULL,
     `changedFiles` INTEGER NULL,
-    `eventType` ENUM('opened', 'merged', 'closed', 'review_requested', 'changes_requested', 'pushed', 'resolved', 'unresolved', 'dismissed', 'approved') NOT NULL,
+    `eventType` ENUM('opened', 'merged', 'closed', 'changes_requested', 'pushed', 'resolved', 'unresolved', 'dismissed', 'approved') NOT NULL,
     `eventTimestamp` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     INDEX `PullRequestEvent_projectId_idx`(`projectId`),
@@ -60,6 +61,20 @@ CREATE TABLE `PullRequestPayload` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `Revision` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `prEventId` INTEGER NOT NULL,
+    `reviewer` VARCHAR(191) NOT NULL,
+
+    INDEX `Revision_prEventId_idx`(`prEventId`),
+    UNIQUE INDEX `Revision_prEventId_key`(`prEventId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `Ticket` ADD CONSTRAINT `Ticket_projectId_fkey` FOREIGN KEY (`projectId`) REFERENCES `Project`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
 -- AddForeignKey
 ALTER TABLE `PullRequestEvent` ADD CONSTRAINT `PullRequestEvent_projectId_fkey` FOREIGN KEY (`projectId`) REFERENCES `Project`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
@@ -71,3 +86,6 @@ ALTER TABLE `PullRequestEvent` ADD CONSTRAINT `PullRequestEvent_ticketId_fkey` F
 
 -- AddForeignKey
 ALTER TABLE `PullRequestPayload` ADD CONSTRAINT `PullRequestPayload_eventId_fkey` FOREIGN KEY (`eventId`) REFERENCES `PullRequestEvent`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Revision` ADD CONSTRAINT `Revision_prEventId_fkey` FOREIGN KEY (`prEventId`) REFERENCES `PullRequestEvent`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

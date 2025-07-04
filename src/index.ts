@@ -230,7 +230,16 @@ app.post("/webhook", async (req: Request, res: Response) => {
       const branch = pr.head.ref || "unknown";
       const prNumber = pr.number;
 
-      await prisma.pullRequestEvent.create({
+
+      const lastEvent = await prisma.pullRequestEvent.findFirst({
+        where: {
+          projectId: project.id,
+          ticketId: ticket?.id,
+        },
+        orderBy: { eventTimestamp: "desc" },
+      });
+
+      const event = await prisma.pullRequestEvent.create({
         data: {
           branch,
           prNumber,
@@ -250,6 +259,18 @@ app.post("/webhook", async (req: Request, res: Response) => {
           }
         },
       });
+
+      const isValidRevision = lastEvent?.eventType === "changes_requested" ||
+        lastEvent?.eventType === "unresolved"
+
+      if (isValidRevision) {
+        await prisma.revision.create({
+          data: {
+            prEventId: event.id,
+            reviewer: lastEvent.reviewer ?? "",
+          },
+        });
+      }
 
       res.status(200).send("Pull request pushed event recorded.");
     } catch (error) {

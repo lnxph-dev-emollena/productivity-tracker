@@ -17,7 +17,6 @@ enum EventType {
   opened
   merged
   closed
-  review_requested
   changes_requested
   pushed
   resolved
@@ -66,6 +65,7 @@ model PullRequestEvent {
   eventType      EventType
   eventTimestamp DateTime            @default(now())
   payload        PullRequestPayload? @relation("EventPayload")
+  Revision       Revision?
 
   @@index([projectId])
   @@index([authorId])
@@ -78,4 +78,14 @@ model PullRequestPayload {
   rawPayload Json
   event      PullRequestEvent @relation("EventPayload", fields: [eventId], references: [id])
   eventId    Int              @unique
+}
+
+model Revision {
+  id        Int              @id @default(autoincrement())
+  prEventId Int
+  prEvent   PullRequestEvent @relation(fields: [prEventId], references: [id])
+  reviewer  String
+
+  @@unique([prEventId])
+  @@index([prEventId])
 }
