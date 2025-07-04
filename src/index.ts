@@ -131,9 +131,18 @@ app.post("/webhook", async (req: Request, res: Response) => {
   if (payload.action === "submitted" && payload.review.state === "changes_requested") {
 
 
+
     try {
       const pr = payload.pull_request;
       const repo = payload.repository;
+
+      const review = payload.review;
+
+      const reviewer = await prisma.user.upsert({
+        where: { username: review.user.login },
+        update: {},
+        create: { username: review.user.login },
+      });
 
       const {
         project,
@@ -141,18 +150,16 @@ app.post("/webhook", async (req: Request, res: Response) => {
         ticket,
       } = await resolveEntities(prisma, pr, repo);
 
-      const review = payload.review;
       const branch = pr.head.ref || "unknown";
-      const reviewer = review.user.login;
       const prNumber = pr.number;
 
       await prisma.pullRequestEvent.create({
         data: {
           branch,
           prNumber,
-          reviewer,
           source,
           projectId: project.id,
+          reviewerId: reviewer.id,
           authorId: user.id,
           ticketId: ticket?.id ?? null,
           eventType: "changes_requested",
@@ -260,14 +267,16 @@ app.post("/webhook", async (req: Request, res: Response) => {
         },
       });
 
+
+
       const isValidRevision = lastEvent?.eventType === "changes_requested" ||
         lastEvent?.eventType === "unresolved"
 
-      if (isValidRevision) {
+      if (isValidRevision && lastEvent.reviewerId) {
         await prisma.revision.create({
           data: {
             prEventId: event.id,
-            reviewer: lastEvent.reviewer ?? "",
+            reviewerId: lastEvent.reviewerId,
           },
         });
       }

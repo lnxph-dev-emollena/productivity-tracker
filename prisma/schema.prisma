@@ -37,6 +37,8 @@ model User {
   id                Int                @id @default(autoincrement())
   username          String             @unique
   pullRequestEvents PullRequestEvent[]
+  Revision          Revision[]
+  reviewedEvents    PullRequestEvent[] @relation("ReviewedEvents")
 }
 
 model Ticket {
@@ -53,7 +55,8 @@ model PullRequestEvent {
   projectId      Int?
   author         User?               @relation(fields: [authorId], references: [id])
   authorId       Int?
-  reviewer       String?
+  reviewer       User?               @relation("ReviewedEvents", fields: [reviewerId], references: [id])
+  reviewerId     Int?
   ticket         Ticket?             @relation(fields: [ticketId], references: [id])
   ticketId       Int?
   source         SourceType
@@ -81,11 +84,13 @@ model PullRequestPayload {
 }
 
 model Revision {
-  id        Int              @id @default(autoincrement())
-  prEventId Int
-  prEvent   PullRequestEvent @relation(fields: [prEventId], references: [id])
-  reviewer  String
+  id         Int              @id @default(autoincrement())
+  prEventId  Int
+  prEvent    PullRequestEvent @relation(fields: [prEventId], references: [id])
+  reviewerId Int
+  reviewer   User             @relation(fields: [reviewerId], references: [id])
 
   @@unique([prEventId])
   @@index([prEventId])
+  @@index([reviewerId])
 }
