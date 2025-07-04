@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (_req: Request, res: Response) => {
-  res.send("Workflow Insight API is running!");
+  res.send("Not Workflow Insight API is running!");
 });
 
 
