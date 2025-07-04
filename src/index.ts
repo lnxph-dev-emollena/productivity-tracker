@@ -292,6 +292,13 @@ app.post("/webhook", async (req: Request, res: Response) => {
     try {
       const pr = payload.pull_request;
       const repo = payload.repository;
+      const review = payload.review;
+
+      const reviewer = await prisma.user.upsert({
+        where: { username: review.user.login },
+        update: {},
+        create: { username: review.user.login },
+      });
 
       const {
         project,
@@ -310,7 +317,7 @@ app.post("/webhook", async (req: Request, res: Response) => {
           projectId: project.id,
           authorId: user.id,
           ticketId: ticket?.id ?? null,
-          reviewer: payload.sender.login,
+          reviewerId: reviewer.id,
           eventType: "approved",
           eventTimestamp: new Date(),
           payload: {
