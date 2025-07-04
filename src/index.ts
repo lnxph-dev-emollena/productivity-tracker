@@ -16,7 +16,7 @@ app.get("/", (_req: Request, res: Response) => {
 
 
 app.post("/webhook/gitlab", async (req: Request, res: Response) => {
- 
+
   const webhook = GitlabWeebhook(req.body);
 
   await webhook.save();
@@ -438,6 +438,13 @@ app.post("/webhook", async (req: Request, res: Response) => {
       const pr = payload.pull_request;
       const repo = payload.repository;
 
+
+      const reviewer = await prisma.user.upsert({
+        where: { username: payload.sender.login },
+        update: {},
+        create: { username: payload.sender.login },
+      });
+
       const {
         project,
         user,
@@ -452,7 +459,7 @@ app.post("/webhook", async (req: Request, res: Response) => {
           branch,
           prNumber,
           source,
-          reviewer: payload.sender.login,
+          reviewerId: reviewer.id,
           projectId: project.id,
           authorId: user.id,
           ticketId: ticket?.id ?? null,
