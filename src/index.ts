@@ -10,7 +10,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (_req: Request, res: Response) => {
-  res.send("Productivity Tracker API is running!");
+  res.send("Workflow Insight API is running!");
 });
 
 app.post("/webhook", async (req: Request, res: Response) => {
