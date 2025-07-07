@@ -115,6 +115,11 @@ export const GitlabWeebhook = (payload: any) => {
         mrId = payload?.merge_request?.iid;
       }
 
+      if(!mrId) {
+        console.error('Merge Request not found.');
+        return false;
+      }
+
       // Get MR Stats
       mrStats = await fetchMRStats(repositoryId, mrId);
 
@@ -251,13 +256,15 @@ export const GitlabWeebhook = (payload: any) => {
 
   async function storeProject() {
     const repositoryName = getRepositoryName();
+    const repositoryFullname = getRepositoryFullName();
+
     // Find or create the project
     return await prisma.project.upsert({
-      where: { repository: repositoryName },
+      where: { name: repositoryName },
       update: {},
       create: {
         name: repositoryName,
-        repository: repositoryName,
+        repository: repositoryFullname,
       },
     });
   }
@@ -373,6 +380,10 @@ export const GitlabWeebhook = (payload: any) => {
 
   function getRepositoryName() {
     return payload?.repository?.name;
+  }
+
+  function getRepositoryFullName() {
+    return payload?.project?.path_with_namespace ?? payload?.repository?.name;
   }
 
   function getTicketName() {
