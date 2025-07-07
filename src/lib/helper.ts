@@ -1,4 +1,4 @@
-import { PrismaClient, Project, User, Ticket } from '@prisma/client';
+import { PrismaClient, Project, User, Ticket, } from '@prisma/client';
 
 interface Repo {
     full_name: string;
