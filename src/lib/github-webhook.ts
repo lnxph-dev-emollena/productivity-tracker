@@ -39,12 +39,6 @@ export const GithubWebhook = async (req: Request, res: Response) => {
         case action === "closed" && payload.pull_request.merged:
             return handleMerged(payload, res);
 
-        case action === "resolved":
-            return handleResolved(payload, res);
-
-        case action === "unresolved":
-            return handleUnresolved(payload, res);
-
         case action === "closed" && !payload.pull_request.merged:
             return handleClosed(payload, res);
 
@@ -294,8 +288,7 @@ const handlePushed = async (payload: any, res: Response) => {
 
 
 
-        const isValidRevision = lastEvent?.eventType === "changes_requested" ||
-            lastEvent?.eventType === "unresolved"
+        const isValidRevision = lastEvent?.eventType === "changes_requested"
 
         if (isValidRevision && lastEvent.reviewerId) {
             await prisma.revision.create({
@@ -402,92 +395,6 @@ const handleMerged = async (payload: any, res: Response) => {
     } catch (error) {
         console.error("Error saving PR merged event:", error);
         res.status(500).json({ error: "Failed to save pull request merged event." });
-    }
-}
-
-const handleResolved = async (payload: any, res: Response) => {
-    try {
-        const pr = payload.pull_request;
-        const repo = payload.repository;
-
-        const {
-            project,
-            user,
-            ticket,
-        } = await resolveEntities(prisma, pr, repo);
-
-        const branch = pr.head.ref || "unknown";
-        const prNumber = pr.number;
-
-        await prisma.pullRequestEvent.create({
-            data: {
-                branch,
-                prNumber,
-                source: SOURCE,
-                projectId: project.id,
-                authorId: user.id,
-                ticketId: ticket?.id ?? null,
-                eventType: EventType.resolved,
-                eventTimestamp: new Date(),
-                payload: {
-                    create: {
-                        rawPayload: payload,
-                    }
-                }
-            },
-        });
-
-        res.status(200).send("Pull request resolved event recorded.");
-    } catch (error) {
-        console.error("Error saving PR resolved event:", error);
-        res.status(500).json({ error: "Failed to save pull request resolved event." });
-    }
-}
-
-const handleUnresolved = async (payload: any, res: Response) => {
-    try {
-        const pr = payload.pull_request;
-        const repo = payload.repository;
-
-
-        const reviewer = await prisma.user.upsert({
-            where: { username: payload.sender.login },
-            update: {},
-            create: { username: payload.sender.login },
-        });
-
-        const {
-            project,
-            user,
-            ticket,
-        } = await resolveEntities(prisma, pr, repo);
-
-        const branch = pr.head.ref || "unknown";
-        const prNumber = pr.number;
-
-        await prisma.pullRequestEvent.create({
-            data: {
-                branch,
-                prNumber,
-                source: SOURCE,
-                reviewerId: reviewer.id,
-                projectId: project.id,
-                authorId: user.id,
-                ticketId: ticket?.id ?? null,
-                eventType: EventType.unresolved,
-                eventTimestamp: new Date(),
-                payload: {
-                    create: {
-                        rawPayload: payload,
-                    }
-                }
-            },
-        });
-
-        res.status(200).send("Pull request unresolved event recorded.");
-    } catch (error) {
-        console.error("Error saving PR unresolved event:", error);
-        res.status(500).json({ error: "Failed to save pull request unresolved event." });
     }
 }
 
