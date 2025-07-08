@@ -260,7 +260,7 @@ export const GitlabWeebhook = (payload: any) => {
 
     // Find or create the project
     return await prisma.project.upsert({
-      where: { name: repositoryName },
+      where: { repository: repositoryFullname },
       update: {},
       create: {
         name: repositoryName,
