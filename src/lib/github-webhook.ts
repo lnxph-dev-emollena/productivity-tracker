@@ -49,7 +49,6 @@ export const GithubWebhook = async (req: Request, res: Response) => {
 
 const handleOpenedEvent = async (payload: any, res: Response) => {
 
-
   try {
     const pr = payload.pull_request;
     const repo = payload.repository;
@@ -156,6 +155,7 @@ const handleOpenedEvent = async (payload: any, res: Response) => {
 };
 
 const handleChangesRequested = async (payload: any, res: Response) => {
+
   try {
     const pr = payload.pull_request;
     const repo = payload.repository;
@@ -212,6 +212,7 @@ const handleChangesRequested = async (payload: any, res: Response) => {
 }
 
 const handleDismissed = async (payload: any, res: Response) => {
+
   try {
     const pr = payload.pull_request;
     const repo = payload.repository;
@@ -259,6 +260,7 @@ const handleDismissed = async (payload: any, res: Response) => {
 }
 
 const handlePushed = async (payload: any, res: Response) => {
+
   try {
     const pr = payload.pull_request;
     const repo = payload.repository;
@@ -327,6 +329,7 @@ const handlePushed = async (payload: any, res: Response) => {
 }
 
 const handleApproved = async (payload: any, res: Response) => {
+
   try {
     const pr = payload.pull_request;
     const repo = payload.repository;
@@ -382,6 +385,7 @@ const handleApproved = async (payload: any, res: Response) => {
 }
 
 const handleMerged = async (payload: any, res: Response) => {
+
   try {
     const pr = payload.pull_request;
     const repo = payload.repository;
@@ -428,6 +432,7 @@ const handleMerged = async (payload: any, res: Response) => {
 }
 
 const handleClosed = async (payload: any, res: Response) => {
+
   try {
     const pr = payload.pull_request;
     const repo = payload.repository;

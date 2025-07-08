@@ -64,9 +64,9 @@ export const getChangedFilesDetails = async (repoFullName: string, prNumber: num
   let files: any[] = [];
   let page = 1;
 
-  const githubToken = process.env.GITHUB_TOKEN;
+  const githubToken = process.env.WEBHOOK_GITHUB_TOKEN;
   if (!githubToken) {
-    throw new Error("GITHUB_TOKEN is not set in environment variables");
+    throw new Error("WEBHOOK_GITHUB_TOKEN is not set in environment variables");
   }
   while (true) {
     const response = await axios.get(
