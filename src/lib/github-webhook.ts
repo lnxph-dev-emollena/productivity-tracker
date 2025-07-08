@@ -1,6 +1,6 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import { resolveEntities } from "./helper";
+import { getChangedFilesDetails, resolveEntities } from "./helper";
 import { EventType } from '@prisma/client';
 
 
@@ -48,15 +48,19 @@ export const GithubWebhook = async (req: Request, res: Response) => {
 };
 
 const handleOpenedEvent = async (payload: any, res: Response) => {
+
+
   try {
     const pr = payload.pull_request;
     const repo = payload.repository;
 
+    const { additions, deletions, changedFiles } = await getChangedFilesDetails(
+      repo.full_name,
+      pr.number,
+    );
+
     const branch = pr.head.ref || "unknown";
     const username = pr.user.login;
-    const additions = pr.additions || 0;
-    const deletions = pr.deletions || 0;
-    const changedFiles = pr.changed_files || 0;
     const prNumber = pr.number;
 
     let ticketCode: string | null = null;
@@ -156,6 +160,11 @@ const handleChangesRequested = async (payload: any, res: Response) => {
     const pr = payload.pull_request;
     const repo = payload.repository;
 
+    const { additions, deletions, changedFiles } = await getChangedFilesDetails(
+      repo.full_name,
+      pr.number,
+    );
+
     const review = payload.review;
 
     const reviewer = await prisma.user.upsert({
@@ -179,6 +188,9 @@ const handleChangesRequested = async (payload: any, res: Response) => {
         prNumber,
         source: SOURCE,
         projectId: project.id,
+        additions,
+        deletions,
+        changedFiles,
         reviewerId: reviewer.id,
         authorId: user.id,
         ticketId: ticket?.id ?? null,
@@ -204,6 +216,11 @@ const handleDismissed = async (payload: any, res: Response) => {
     const pr = payload.pull_request;
     const repo = payload.repository;
 
+    const { additions, deletions, changedFiles } = await getChangedFilesDetails(
+      repo.full_name,
+      pr.number,
+    );
+
     const {
       project,
       user,
@@ -218,6 +235,9 @@ const handleDismissed = async (payload: any, res: Response) => {
         branch,
         prNumber,
         source: SOURCE,
+        additions,
+        deletions,
+        changedFiles,
         projectId: project.id,
         authorId: user.id,
         ticketId: ticket?.id ?? null,
@@ -242,16 +262,16 @@ const handlePushed = async (payload: any, res: Response) => {
   try {
     const pr = payload.pull_request;
     const repo = payload.repository;
+    const { additions, deletions, changedFiles } = await getChangedFilesDetails(
+      repo.full_name,
+      pr.number,
+    );
 
     const {
       project,
       user,
       ticket,
     } = await resolveEntities(prisma, pr, repo);
-
-    const additions = pr.additions || 0;
-    const deletions = pr.deletions || 0;
-    const changedFiles = pr.changed_files || 0;
 
     const branch = pr.head.ref || "unknown";
     const prNumber = pr.number;
@@ -312,6 +332,11 @@ const handleApproved = async (payload: any, res: Response) => {
     const repo = payload.repository;
     const review = payload.review;
 
+    const { additions, deletions, changedFiles } = await getChangedFilesDetails(
+      repo.full_name,
+      pr.number,
+    );
+
     const reviewer = await prisma.user.upsert({
       where: { username: review.user.login },
       update: {},
@@ -333,6 +358,9 @@ const handleApproved = async (payload: any, res: Response) => {
         prNumber,
         source: SOURCE,
         projectId: project.id,
+        additions,
+        deletions,
+        changedFiles,
         authorId: user.id,
         ticketId: ticket?.id ?? null,
         reviewerId: reviewer.id,
@@ -357,6 +385,10 @@ const handleMerged = async (payload: any, res: Response) => {
   try {
     const pr = payload.pull_request;
     const repo = payload.repository;
+    const { additions, deletions, changedFiles } = await getChangedFilesDetails(
+      repo.full_name,
+      pr.number,
+    );
 
     const {
       project,
@@ -366,9 +398,6 @@ const handleMerged = async (payload: any, res: Response) => {
 
     const branch = pr.head.ref || "unknown";
     const prNumber = pr.number;
-    const additions = pr.additions || 0;
-    const deletions = pr.deletions || 0;
-    const changedFiles = pr.changed_files || 0;
 
     await prisma.pullRequestEvent.create({
       data: {
@@ -403,6 +432,11 @@ const handleClosed = async (payload: any, res: Response) => {
     const pr = payload.pull_request;
     const repo = payload.repository;
 
+    const { additions, deletions, changedFiles } = await getChangedFilesDetails(
+      repo.full_name,
+      pr.number,
+    );
+
     const {
       project,
       user,
@@ -418,6 +452,9 @@ const handleClosed = async (payload: any, res: Response) => {
         prNumber,
         source: SOURCE,
         projectId: project.id,
+        additions,
+        deletions,
+        changedFiles,
         authorId: user.id,
         ticketId: ticket?.id ?? null,
         eventType: EventType.closed,

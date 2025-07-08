@@ -20,10 +20,10 @@ app.post("/webhook/gitlab", async (req: Request, res: Response) => {
 
   const isSuccess = await webhook.save();
 
-  if(!isSuccess) res.status(200).send("Unable to process the event — it may have been intentionally ignored or an error occurred.");
+  if (!isSuccess) res.status(200).send("Unable to process the event — it may have been intentionally ignored or an error occurred.");
 
   console.log("Event Processed: Pull request opened event recorded.");
-  
+
   res.status(200).send("Pull request opened event recorded.");
 
   return;
