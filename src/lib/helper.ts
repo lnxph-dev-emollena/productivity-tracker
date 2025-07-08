@@ -1,4 +1,5 @@
 import { PrismaClient, Project, User, Ticket, } from '@prisma/client';
+import axios from 'axios';
 
 interface Repo {
   full_name: string;
@@ -54,4 +55,44 @@ export const resolveEntities = async (
     user,
     ticket,
   };
+};
+
+
+
+export const getChangedFilesDetails = async (repoFullName: string, prNumber: number): Promise<{ additions: number; deletions: number; changedFiles: number }> => {
+  const [owner, repo] = repoFullName.split("/");
+  let files: any[] = [];
+  let page = 1;
+
+  const githubToken = process.env.WEBHOOK_GITHUB_TOKEN;
+  if (!githubToken) {
+    throw new Error("WEBHOOK_GITHUB_TOKEN is not set in environment variables");
+  }
+  while (true) {
+    const response = await axios.get(
+      `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}/files`,
+      {
+        headers: {
+          Authorization: `Bearer ${githubToken}`,
+          Accept: "application/vnd.github+json"
+        },
+        params: { per_page: 100, page }
+      }
+    );
+
+    files = files.concat(response.data);
+
+    if (response.data.length < 100) break;
+    page++;
+  }
+
+  const filteredFiles = files.filter(file =>
+    !file.filename.match(/(package-lock\.json|yarn\.lock|pnpm-lock\.yaml)$/)
+  );
+
+  const additions = filteredFiles.reduce((sum, f) => sum + f.additions, 0);
+  const deletions = filteredFiles.reduce((sum, f) => sum + f.deletions, 0);
+  const changedFiles = filteredFiles.length;
+
+  return { additions, deletions, changedFiles };
 };
