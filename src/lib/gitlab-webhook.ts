@@ -56,12 +56,16 @@ const fetchMRStats = async (repositoryId: string, mrIid: string): Promise<MergeR
 
     changes.forEach((change: any) => {
       const diff = change.diff;
+      const fileName = change.new_path;
       const lines = diff.split('\n');
+      const containsLock = /(package-lock\.json|yarn\.lock|pnpm-lock\.yaml)$/.test(fileName);
 
-      for (const line of lines) {
-        if (line.startsWith('+') && !line.startsWith('+++')) totalAdded++;
-        if (line.startsWith('-') && !line.startsWith('---')) totalRemoved++;
-        if (line.startsWith('+') && !line.startsWith('+++') || line.startsWith('-') && !line.startsWith('---')) changedFiles++;
+      if (!containsLock) {
+        for (const line of lines) {
+          if (line.startsWith('+') && !line.startsWith('+++')) totalAdded++;
+          if (line.startsWith('-') && !line.startsWith('---')) totalRemoved++;
+          if (line.startsWith('+') && !line.startsWith('+++') || line.startsWith('-') && !line.startsWith('---')) changedFiles++;
+        }
       }
     });
 
@@ -115,7 +119,7 @@ export const GitlabWeebhook = (payload: any) => {
         mrId = payload?.merge_request?.iid;
       }
 
-      if(!mrId) {
+      if (!mrId) {
         console.error('Merge Request not found.');
         return false;
       }
