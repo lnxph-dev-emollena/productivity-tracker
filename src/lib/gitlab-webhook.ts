@@ -106,13 +106,21 @@ export const GitlabWeebhook = (payload: any) => {
   let repositoryId = payload.project.id;
   let mrStats: MergeRequestStats | null = null;
   let mrId: any = null;
+  const ignoredPrefixes = ["dev", "develop", "staging", "main", "prod", "production"];
 
   async function save() {
     try {
+
+      const branchName = getBranchName();
+
+      if (branchName && ignoredPrefixes.some(prefix => branchName.startsWith(prefix))) {
+        console.error('Branch ignored.');
+        return false;
+      }
+
       if (eventType == GitlabWeebhookEventType.MERGE_REQUEST) {
         mrId = payload?.object_attributes?.iid;
       } else if (eventType == GitlabWeebhookEventType.PUSH) {
-        const branchName = getBranchName();
         // Get the merge request id
         mrId = await getMrID(repositoryId, branchName);
       } else if (eventType == GitlabWeebhookEventType.NOTE) {
@@ -140,7 +148,7 @@ export const GitlabWeebhook = (payload: any) => {
               user,
               ticket,
               project,
-              getBranchName(),
+              branchName,
               mrStats,
               WebhookDatabaseEventType.OPENED
             );
@@ -150,7 +158,7 @@ export const GitlabWeebhook = (payload: any) => {
               user,
               ticket,
               project,
-              getBranchName(),
+              branchName,
               mrStats,
               WebhookDatabaseEventType.MERGED,
               null,
@@ -167,7 +175,7 @@ export const GitlabWeebhook = (payload: any) => {
               user,
               ticket,
               project,
-              getBranchName(),
+              branchName,
               mrStats,
               action,
               reviewerId,
@@ -188,7 +196,7 @@ export const GitlabWeebhook = (payload: any) => {
                 authorUser,
                 ticket,
                 project,
-                getBranchName(),
+                branchName,
                 mrStats,
                 action,
                 reviewerId,
@@ -208,7 +216,7 @@ export const GitlabWeebhook = (payload: any) => {
               user,
               ticket,
               project,
-              getBranchName(),
+              branchName,
               mrStats,
               WebhookDatabaseEventType.PUSHED,
               reviewerId,
@@ -240,7 +248,7 @@ export const GitlabWeebhook = (payload: any) => {
             authorUser,
             ticket,
             project,
-            getBranchName(),
+            branchName,
             mrStats,
             WebhookDatabaseEventType.CHANGES_REQUESTED,
             reviewerId,
