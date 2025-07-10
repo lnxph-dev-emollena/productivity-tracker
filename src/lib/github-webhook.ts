@@ -11,10 +11,21 @@ export const GithubWebhook = async (req: Request, res: Response) => {
   const event = req.headers["x-github-event"];
   const payload = req.body;
 
+
+
   if (
     !["pull_request", "pull_request_review", "pull_request_review_thread"].includes(event as string)
   ) {
     res.status(200).send("Event ignored");
+    return;
+  }
+
+  const branch = payload.pull_request?.head?.ref;
+
+  const ignoredPrefixes = ["dev", "develop", "staging", "main", "prod", "production"];
+
+  if (branch && ignoredPrefixes.some(prefix => branch.startsWith(prefix))) {
+    res.status(200).send("Branch ignored");
     return;
   }
 
