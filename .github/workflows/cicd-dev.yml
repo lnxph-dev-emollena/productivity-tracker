@@ -51,7 +51,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "docker-compose.yml,.env"
-          target: "/home/ubuntu/app"
+          target: "/home/ubuntu/app-2"
 
       - name: Deploy on EC2 via SSH
         uses: appleboy/ssh-action@v1.2.2
@@ -61,7 +61,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-            cd "/home/ubuntu/app"
+            cd "/home/ubuntu/app-2"
 
             export AWS_REGION="${{ secrets.AWS_REGION }}"
             export AWS_ACCOUNT_ID="${{ secrets.AWS_ACCOUNT_ID }}"
