@@ -1,6 +1,6 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import { getChangedFilesDetails, resolveEntities } from "./helper";
+import { fetchPushCommitStats, getChangedFilesDetails, resolveEntities } from "./helper";
 import { EventType } from '@prisma/client';
 
 
@@ -12,6 +12,64 @@ export const GithubWebhook = async (req: Request, res: Response) => {
   const payload = req.body;
 
 
+  if (event === 'push') {
+    if (payload.head_commit.committer.name === "GitHub") {
+
+      res.status(200).send("Invalid push event from GitHub");
+      return;
+    }
+
+    const repo = payload.repository;
+    const username = payload.pusher?.name;
+    const project = await prisma.project.upsert({
+      where: { repository: repo.full_name },
+      update: {},
+      create: {
+        name: repo.name,
+        repository: repo.full_name,
+      },
+    });
+
+    const user = await prisma.user.upsert({
+      where: { username },
+      update: {},
+      create: { username },
+    });
+
+    try {
+      const stats = await fetchPushCommitStats(payload);
+
+      const { totalAdditions, totalDeletions } = stats;
+      const changedFiles: number = payload.head_commit?.added?.length + payload.head_commit?.removed?.length + payload.head_commit?.modified?.length;
+
+
+      await prisma.event.create({
+        data: {
+          branch: payload.ref?.replace('refs/heads/', ''),
+          source: SOURCE,
+          project_id: project.id,
+          author_id: user.id,
+          additions: totalAdditions,
+          deletions: totalDeletions,
+          changed_files: changedFiles,
+          event_type: EventType.pushed,
+          date_created: new Date(),
+          payload: {
+            create: {
+              rawPayload: payload,
+            }
+          }
+        },
+      });
+
+      res.status(200).send("Push event processed successfully.");
+      return
+    } catch (error) {
+      console.error("Error processing push event:", error);
+      res.status(500).json({ error: "Failed to process push event." });
+      return
+    }
+  }
 
   if (
     !["pull_request", "pull_request_review", "pull_request_review_thread"].includes(event as string)
@@ -113,11 +171,11 @@ const handleOpenedEvent = async (payload: any, res: Response) => {
     }
 
     // 4. Check for existing pull request from same author/project/ticket
-    const existingPR = await prisma.pullRequestEvent.findFirst({
+    const existingPR = await prisma.event.findFirst({
       where: {
-        authorId: user.id,
-        projectId: project.id,
-        ticketId: ticket?.id ?? undefined,
+        author_id: user.id,
+        project_id: project.id,
+        ticket_id: ticket?.id ?? undefined,
         prNumber,
       },
     });
@@ -129,19 +187,19 @@ const handleOpenedEvent = async (payload: any, res: Response) => {
     }
 
     // 5. Save the new PR
-    await prisma.pullRequestEvent.create({
+    await prisma.event.create({
       data: {
-        projectId: project.id,
-        authorId: user.id,
-        ticketId: ticket?.id ?? null,
+        project_id: project.id,
+        author_id: user.id,
+        ticket_id: ticket?.id ?? null,
         branch,
         prNumber,
         additions,
         deletions,
-        changedFiles,
+        changed_files: changedFiles,
         source: SOURCE,
-        eventType: EventType.opened,
-        eventTimestamp: new Date(),
+        event_type: EventType.opened,
+        date_created: new Date(),
         payload: {
           create: {
             rawPayload: payload,
@@ -193,20 +251,20 @@ const handleChangesRequested = async (payload: any, res: Response) => {
     const branch = pr.head.ref || "unknown";
     const prNumber = pr.number;
 
-    await prisma.pullRequestEvent.create({
+    await prisma.event.create({
       data: {
         branch,
         prNumber,
         source: SOURCE,
-        projectId: project.id,
+        project_id: project.id,
         additions,
         deletions,
-        changedFiles,
-        reviewerId: reviewer.id,
-        authorId: user.id,
-        ticketId: ticket?.id ?? null,
-        eventType: EventType.changes_requested,
-        eventTimestamp: new Date(),
+        changed_files: changedFiles,
+        reviewer_id: reviewer.id,
+        author_id: user.id,
+        ticket_id: ticket?.id ?? null,
+        event_type: EventType.changes_requested,
+        date_created: new Date(),
         payload: {
           create: {
             rawPayload: payload,
@@ -242,19 +300,19 @@ const handleDismissed = async (payload: any, res: Response) => {
     const branch = pr.head.ref || "unknown";
     const prNumber = pr.number;
 
-    await prisma.pullRequestEvent.create({
+    await prisma.event.create({
       data: {
         branch,
         prNumber,
         source: SOURCE,
         additions,
         deletions,
-        changedFiles,
-        projectId: project.id,
-        authorId: user.id,
-        ticketId: ticket?.id ?? null,
-        eventType: EventType.dismissed,
-        eventTimestamp: new Date(),
+        changed_files: changedFiles,
+        project_id: project.id,
+        author_id: user.id,
+        ticket_id: ticket?.id ?? null,
+        event_type: EventType.dismissed,
+        date_created: new Date(),
         payload: {
           create: {
             rawPayload: payload,
@@ -290,27 +348,27 @@ const handlePushed = async (payload: any, res: Response) => {
     const prNumber = pr.number;
 
 
-    const lastEvent = await prisma.pullRequestEvent.findFirst({
+    const lastEvent = await prisma.event.findFirst({
       where: {
-        projectId: project.id,
-        ticketId: ticket?.id,
+        project_id: project.id,
+        ticket_id: ticket?.id,
       },
-      orderBy: { eventTimestamp: "desc" },
+      orderBy: { date_created: "desc" },
     });
 
-    const event = await prisma.pullRequestEvent.create({
+    const event = await prisma.event.create({
       data: {
         branch,
         prNumber,
         source: SOURCE,
-        projectId: project.id,
-        authorId: user.id,
-        ticketId: ticket?.id ?? null,
-        eventType: EventType.pushed,
-        eventTimestamp: new Date(),
+        project_id: project.id,
+        author_id: user.id,
+        ticket_id: ticket?.id ?? null,
+        event_type: EventType.pushed,
+        date_created: new Date(),
         additions,
         deletions,
-        changedFiles,
+        changed_files: changedFiles,
         payload: {
           create: {
             rawPayload: payload,
@@ -321,13 +379,13 @@ const handlePushed = async (payload: any, res: Response) => {
 
 
 
-    const isValidRevision = lastEvent?.eventType === "changes_requested"
+    const isValidRevision = lastEvent?.event_type === "changes_requested"
 
-    if (isValidRevision && lastEvent.reviewerId) {
+    if (isValidRevision && lastEvent.reviewer_id) {
       await prisma.revision.create({
         data: {
-          prEventId: event.id,
-          reviewerId: lastEvent.reviewerId,
+          pr_event_id: event.id,
+          reviewer_id: lastEvent.reviewer_id,
         },
       });
     }
@@ -366,20 +424,20 @@ const handleApproved = async (payload: any, res: Response) => {
     const branch = pr.head.ref || "unknown";
     const prNumber = pr.number;
 
-    await prisma.pullRequestEvent.create({
+    await prisma.event.create({
       data: {
         branch,
         prNumber,
         source: SOURCE,
-        projectId: project.id,
+        project_id: project.id,
         additions,
         deletions,
-        changedFiles,
-        authorId: user.id,
-        ticketId: ticket?.id ?? null,
-        reviewerId: reviewer.id,
-        eventType: EventType.approved,
-        eventTimestamp: new Date(),
+        changed_files: changedFiles,
+        author_id: user.id,
+        ticket_id: ticket?.id ?? null,
+        reviewer_id: reviewer.id,
+        event_type: EventType.approved,
+        date_created: new Date(),
         payload: {
           create: {
             rawPayload: payload,
@@ -414,19 +472,19 @@ const handleMerged = async (payload: any, res: Response) => {
     const branch = pr.head.ref || "unknown";
     const prNumber = pr.number;
 
-    await prisma.pullRequestEvent.create({
+    await prisma.event.create({
       data: {
         branch,
         prNumber,
         source: SOURCE,
-        projectId: project.id,
-        authorId: user.id,
-        ticketId: ticket?.id ?? null,
+        project_id: project.id,
+        author_id: user.id,
+        ticket_id: ticket?.id ?? null,
         additions,
         deletions,
-        changedFiles,
-        eventType: EventType.merged,
-        eventTimestamp: new Date(),
+        changed_files: changedFiles,
+        event_type: EventType.merged,
+        date_created: new Date(),
         payload: {
           create: {
             rawPayload: payload,
@@ -462,19 +520,19 @@ const handleClosed = async (payload: any, res: Response) => {
     const branch = pr.head.ref || "unknown";
     const prNumber = pr.number;
 
-    await prisma.pullRequestEvent.create({
+    await prisma.event.create({
       data: {
         branch,
         prNumber,
         source: SOURCE,
-        projectId: project.id,
+        project_id: project.id,
         additions,
         deletions,
-        changedFiles,
-        authorId: user.id,
-        ticketId: ticket?.id ?? null,
-        eventType: EventType.closed,
-        eventTimestamp: new Date(),
+        changed_files: changedFiles,
+        author_id: user.id,
+        ticket_id: ticket?.id ?? null,
+        event_type: EventType.closed,
+        date_created: new Date(),
         payload: {
           create: {
             rawPayload: payload,

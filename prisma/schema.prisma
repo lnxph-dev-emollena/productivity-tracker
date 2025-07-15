@@ -19,8 +19,6 @@ enum EventType {
   closed
   changes_requested
   pushed
-  resolved
-  unresolved
   dismissed
   approved
   unapproved
@@ -28,71 +26,71 @@ enum EventType {
 }
 
 model Project {
-  id                Int                @id @default(autoincrement())
-  name              String             @unique
-  repository        String             @unique
-  pullRequestEvents PullRequestEvent[]
-  tickets           Ticket[]
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  repository String   @unique
+  events     Event[]
+  tickets    Ticket[]
 }
 
 model User {
-  id                Int                @id @default(autoincrement())
-  username          String             @unique
-  pullRequestEvents PullRequestEvent[]
-  Revision          Revision[]
-  reviewedEvents    PullRequestEvent[] @relation("ReviewedEvents")
+  id              Int        @id @default(autoincrement())
+  username        String     @unique
+  events          Event[]
+  revisions       Revision[]
+  reviewed_events Event[]    @relation("ReviewedEvents")
 }
 
 model Ticket {
-  id                Int                @id @default(autoincrement())
-  code              String             @unique
-  pullRequestEvents PullRequestEvent[]
-  projectId         Int
-  project           Project            @relation(fields: [projectId], references: [id])
+  id        Int     @id @default(autoincrement())
+  code      String  @unique
+  events    Event[]
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id])
 }
 
-model PullRequestEvent {
-  id             Int                 @id @default(autoincrement())
-  project        Project?            @relation(fields: [projectId], references: [id])
-  projectId      Int?
-  author         User?               @relation(fields: [authorId], references: [id])
-  authorId       Int?
-  reviewer       User?               @relation("ReviewedEvents", fields: [reviewerId], references: [id])
-  reviewerId     Int?
-  ticket         Ticket?             @relation(fields: [ticketId], references: [id])
-  ticketId       Int?
-  source         SourceType
-  branch         String?
-  prNumber       Int?
-  additions      Int?
-  deletions      Int?
-  changedFiles   Int?
-  eventType      EventType
-  eventTimestamp DateTime            @default(now())
-  payload        PullRequestPayload? @relation("EventPayload")
-  Revision       Revision?
+model Event {
+  id            Int           @id @default(autoincrement())
+  project       Project?      @relation(fields: [project_id], references: [id])
+  project_id    Int?
+  author        User?         @relation(fields: [author_id], references: [id])
+  author_id     Int?
+  reviewer      User?         @relation("ReviewedEvents", fields: [reviewer_id], references: [id])
+  reviewer_id   Int?
+  ticket        Ticket?       @relation(fields: [ticket_id], references: [id])
+  ticket_id     Int?
+  source        SourceType
+  branch        String?
+  prNumber      Int?
+  additions     Int?
+  deletions     Int?
+  changed_files Int?
+  event_type    EventType
+  date_created  DateTime      @default(now())
+  payload       EventPayload? @relation("EventPayload")
+  revision      Revision?
 
-  @@index([projectId])
-  @@index([authorId])
-  @@index([ticketId])
-  @@index([authorId, ticketId])
+  @@index([project_id])
+  @@index([author_id])
+  @@index([ticket_id])
+  @@index([author_id, ticket_id])
 }
 
-model PullRequestPayload {
-  id         Int              @id @default(autoincrement())
+model EventPayload {
+  id         Int   @id @default(autoincrement())
   rawPayload Json
-  event      PullRequestEvent @relation("EventPayload", fields: [eventId], references: [id])
-  eventId    Int              @unique
+  event      Event @relation("EventPayload", fields: [eventId], references: [id])
+  eventId    Int   @unique
 }
 
 model Revision {
-  id         Int              @id @default(autoincrement())
-  prEventId  Int
-  prEvent    PullRequestEvent @relation(fields: [prEventId], references: [id])
-  reviewerId Int
-  reviewer   User             @relation(fields: [reviewerId], references: [id])
+  id          Int   @id @default(autoincrement())
+  pr_event_id Int
+  pr_event    Event @relation(fields: [pr_event_id], references: [id])
+  reviewer_id Int
+  reviewer    User  @relation(fields: [reviewer_id], references: [id])
 
-  @@unique([prEventId])
-  @@index([prEventId])
-  @@index([reviewerId])
+  @@unique([pr_event_id])
+  @@index([pr_event_id])
+  @@index([reviewer_id])
 }
