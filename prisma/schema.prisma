@@ -42,11 +42,11 @@ model User {
 }
 
 model Ticket {
-  id        Int     @id @default(autoincrement())
-  code      String  @unique
-  events    Event[]
-  projectId Int
-  project   Project @relation(fields: [projectId], references: [id])
+  id         Int     @id @default(autoincrement())
+  code       String  @unique
+  events     Event[]
+  project_id Int
+  project    Project @relation(fields: [project_id], references: [id])
 }
 
 model Event {
@@ -61,7 +61,7 @@ model Event {
   ticket_id     Int?
   source        SourceType
   branch        String?
-  prNumber      Int?
+  pr_number     Int?
   additions     Int?
   deletions     Int?
   changed_files Int?
@@ -77,10 +77,10 @@ model Event {
 }
 
 model EventPayload {
-  id         Int   @id @default(autoincrement())
-  rawPayload Json
-  event      Event @relation("EventPayload", fields: [eventId], references: [id])
-  eventId    Int   @unique
+  id          Int   @id @default(autoincrement())
+  raw_payload Json
+  event       Event @relation("EventPayload", fields: [eventId], references: [id])
+  eventId     Int   @unique
 }
 
 model Revision {

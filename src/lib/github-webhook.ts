@@ -56,7 +56,7 @@ export const GithubWebhook = async (req: Request, res: Response) => {
           date_created: new Date(),
           payload: {
             create: {
-              rawPayload: payload,
+              raw_payload: payload,
             }
           }
         },
@@ -166,7 +166,7 @@ const handleOpenedEvent = async (payload: any, res: Response) => {
       ticket = await prisma.ticket.upsert({
         where: { code: ticketCode },
         update: {},
-        create: { code: ticketCode, projectId: project.id },
+        create: { code: ticketCode, project_id: project.id },
       });
     }
 
@@ -176,7 +176,7 @@ const handleOpenedEvent = async (payload: any, res: Response) => {
         author_id: user.id,
         project_id: project.id,
         ticket_id: ticket?.id ?? undefined,
-        prNumber,
+        pr_number: prNumber,
       },
     });
 
@@ -193,7 +193,7 @@ const handleOpenedEvent = async (payload: any, res: Response) => {
         author_id: user.id,
         ticket_id: ticket?.id ?? null,
         branch,
-        prNumber,
+        pr_number: prNumber,
         additions,
         deletions,
         changed_files: changedFiles,
@@ -202,7 +202,7 @@ const handleOpenedEvent = async (payload: any, res: Response) => {
         date_created: new Date(),
         payload: {
           create: {
-            rawPayload: payload,
+            raw_payload: payload,
           }
         }
       },
@@ -254,7 +254,7 @@ const handleChangesRequested = async (payload: any, res: Response) => {
     await prisma.event.create({
       data: {
         branch,
-        prNumber,
+        pr_number: prNumber,
         source: SOURCE,
         project_id: project.id,
         additions,
@@ -267,7 +267,7 @@ const handleChangesRequested = async (payload: any, res: Response) => {
         date_created: new Date(),
         payload: {
           create: {
-            rawPayload: payload,
+            raw_payload: payload,
           }
         }
       },
@@ -303,7 +303,7 @@ const handleDismissed = async (payload: any, res: Response) => {
     await prisma.event.create({
       data: {
         branch,
-        prNumber,
+        pr_number: prNumber,
         source: SOURCE,
         additions,
         deletions,
@@ -315,7 +315,7 @@ const handleDismissed = async (payload: any, res: Response) => {
         date_created: new Date(),
         payload: {
           create: {
-            rawPayload: payload,
+            raw_payload: payload,
           }
         }
       },
@@ -359,7 +359,7 @@ const handlePushed = async (payload: any, res: Response) => {
     const event = await prisma.event.create({
       data: {
         branch,
-        prNumber,
+        pr_number: prNumber,
         source: SOURCE,
         project_id: project.id,
         author_id: user.id,
@@ -371,7 +371,7 @@ const handlePushed = async (payload: any, res: Response) => {
         changed_files: changedFiles,
         payload: {
           create: {
-            rawPayload: payload,
+            raw_payload: payload,
           }
         }
       },
@@ -427,7 +427,7 @@ const handleApproved = async (payload: any, res: Response) => {
     await prisma.event.create({
       data: {
         branch,
-        prNumber,
+        pr_number: prNumber,
         source: SOURCE,
         project_id: project.id,
         additions,
@@ -440,7 +440,7 @@ const handleApproved = async (payload: any, res: Response) => {
         date_created: new Date(),
         payload: {
           create: {
-            rawPayload: payload,
+            raw_payload: payload,
           }
         }
       },
@@ -475,7 +475,7 @@ const handleMerged = async (payload: any, res: Response) => {
     await prisma.event.create({
       data: {
         branch,
-        prNumber,
+        pr_number: prNumber,
         source: SOURCE,
         project_id: project.id,
         author_id: user.id,
@@ -487,7 +487,7 @@ const handleMerged = async (payload: any, res: Response) => {
         date_created: new Date(),
         payload: {
           create: {
-            rawPayload: payload,
+            raw_payload: payload,
           }
         }
       },
@@ -523,7 +523,7 @@ const handleClosed = async (payload: any, res: Response) => {
     await prisma.event.create({
       data: {
         branch,
-        prNumber,
+        pr_number: prNumber,
         source: SOURCE,
         project_id: project.id,
         additions,
@@ -535,7 +535,7 @@ const handleClosed = async (payload: any, res: Response) => {
         date_created: new Date(),
         payload: {
           create: {
-            rawPayload: payload,
+            raw_payload: payload,
           }
         }
       },
