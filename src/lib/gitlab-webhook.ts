@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { PrismaClient, Project, Ticket, User } from "@prisma/client";
 import axios from "axios";
 
