@@ -14,24 +14,24 @@ app.get("/", (_req: Request, res: Response) => {
 });
 
 
-// app.post("/webhook/gitlab", async (req: Request, res: Response) => {
+app.post("/webhook/gitlab", async (req: Request, res: Response) => {
 
-//   const webhook = GitlabWeebhook(req.body);
+  const webhook = GitlabWeebhook(req.body);
 
-//   const isSuccess = await webhook.save();
+  const isSuccess = await webhook.save();
 
-//   if (!isSuccess) {
-//     console.log("Unable to process the event — it may have been intentionally ignored or an error occurred.");
-//     res.status(200).send("Unable to process the event — it may have been intentionally ignored or an error occurred.");
-//     return;
-//   }
+  if (!isSuccess) {
+    console.log("Unable to process the event — it may have been intentionally ignored or an error occurred.");
+    res.status(200).send("Unable to process the event — it may have been intentionally ignored or an error occurred.");
+    return;
+  }
 
-//   console.log("Event Processed: Pull request opened event recorded.");
-//   res.status(200).send("Pull request opened event recorded.");
+  console.log("Event Processed: Pull request opened event recorded.");
+  res.status(200).send("Pull request opened event recorded.");
 
-//   return;
+  return;
 
-// });
+});
 
 app.post("/webhook", GithubWebhook as RequestHandler);
 
