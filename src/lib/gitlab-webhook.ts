@@ -29,6 +29,7 @@ const GITLAB_SOURCE = 'gitlab';
 const GITLAB_API_URL = process.env.GITLAB_HOST || 'https://gitlab.lanexus.com/api/v4';
 const PRIVATE_TOKEN = process.env.GITLAB_PRIVATE_TOKEN || '9aBoc95g-vWi4ssjjj4d';
 const IGNORE_BRANCHES = ["dev", "develop", "staging", "main", "prod", "production"];
+const INITIAL_COMMIT_HASH = "0000000000000000000000000000000000000000";
 
 export const getMrID = async (repositoryId: string, branchName: string): Promise<number | null> => {
   try {
@@ -86,7 +87,7 @@ const fethPushStats = async (repositoryId: string, before: string, after: string
   try {
     const response: any = await getCompare(repositoryId, before, after);
 
-    const changes = response.diffs;
+    const changes = before == INITIAL_COMMIT_HASH ? response : response.diffs;
 
     let totalAdded = 0;
     let totalRemoved = 0;
@@ -120,7 +121,10 @@ const fethPushStats = async (repositoryId: string, before: string, after: string
 }
 
 const getCompare = async (repositoryId: string, fromHash: string, toHash: string): Promise<any> => {
-  const url = `${GITLAB_API_URL}/projects/${repositoryId}/repository/compare`;
+  let url = `${GITLAB_API_URL}/projects/${repositoryId}/repository/compare`;
+
+  if (fromHash == INITIAL_COMMIT_HASH)
+    url = `${GITLAB_API_URL}/projects/${repositoryId}/repository/commits/${toHash}/diff`;
 
   try {
     const response = await axios.get(url, {
@@ -159,8 +163,10 @@ const getMergeRequest = async (repositoryId: string, mrIid: string): Promise<any
   }
 }
 
-export const GitlabWeebhook = (payload: any) => {
+export const GitlabWeebhook = (request: any) => {
 
+  const payload = request.body;
+  const params = request.query;
   const prisma = new PrismaClient();
   const eventType = payload.event_type ?? payload.event_name;
   let repositoryId = payload.project.id;
@@ -345,12 +351,28 @@ export const GitlabWeebhook = (payload: any) => {
   }
 
   async function storeProject() {
-    const repositoryName = getRepositoryName();
+    const resolvedByBranch = isProjectFromBranchName();
     const repositoryFullname = getRepositoryFullName();
+    let repositoryName = getRepositoryName();
 
-    // Find or create the project
+    if (resolvedByBranch) {
+      repositoryName = getTargetBranch();
+      // Find or create project
+      const existingProject = await prisma.project.findFirst({
+        where: {
+          repository: repositoryFullname,
+          name: repositoryName,
+        },
+      });
+
+      if (existingProject)
+        return existingProject;
+    }
+
     return await prisma.project.upsert({
-      where: { repository: repositoryFullname },
+      where: {
+        repository_name: { repository: repositoryFullname, name: repositoryName },
+      },
       update: {},
       create: {
         name: repositoryName,
@@ -453,6 +475,36 @@ export const GitlabWeebhook = (payload: any) => {
     }
 
     return branch;
+  }
+
+  function getTargetBranch() {
+    let branch = null;
+
+    // Available during note action
+    if (!branch && payload?.merge_request) {
+      branch = payload?.merge_request.target_branch;
+    }
+
+    // Check for possible branch sources
+    if (payload.object_attributes) {
+      branch = payload.object_attributes.target_branch;
+    }
+
+    // Available during push action
+    if (!branch && payload.ref) {
+      branch = payload?.ref?.replace('refs/heads/', '');
+    }
+
+    return branch;
+  }
+
+  function branchesResolvedAsProjects(): Array<string> {
+    return params['branch-projects'] ?? [];
+  }
+
+  function isProjectFromBranchName() {
+    const branchName = getTargetBranch();
+    return branchName ? branchesResolvedAsProjects().includes(branchName) : false;
   }
 
   async function getReviewerId(username: any) {
