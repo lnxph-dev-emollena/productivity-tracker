@@ -50,14 +50,14 @@ model Ticket {
 }
 
 model Event {
-  id            Int           @id @default(autoincrement())
-  project       Project?      @relation(fields: [project_id], references: [id])
+  id            Int        @id @default(autoincrement())
+  project       Project?   @relation(fields: [project_id], references: [id])
   project_id    Int?
-  author        User?         @relation(fields: [author_id], references: [id])
+  author        User?      @relation(fields: [author_id], references: [id])
   author_id     Int?
-  reviewer      User?         @relation("ReviewedEvents", fields: [reviewer_id], references: [id])
+  reviewer      User?      @relation("ReviewedEvents", fields: [reviewer_id], references: [id])
   reviewer_id   Int?
-  ticket        Ticket?       @relation(fields: [ticket_id], references: [id])
+  ticket        Ticket?    @relation(fields: [ticket_id], references: [id])
   ticket_id     Int?
   source        SourceType
   branch        String?
@@ -66,8 +66,8 @@ model Event {
   deletions     Int?
   changed_files Int?
   event_type    EventType
-  date_created  DateTime      @default(now())
-  payload       EventPayload? @relation("EventPayload")
+  date_created  DateTime   @default(now())
+  payload       Payload?   @relation("Payload")
   revision      Revision?
 
   @@index([project_id])
@@ -76,10 +76,10 @@ model Event {
   @@index([author_id, ticket_id])
 }
 
-model EventPayload {
+model Payload {
   id          Int   @id @default(autoincrement())
   raw_payload Json
-  event       Event @relation("EventPayload", fields: [event_id], references: [id])
+  event       Event @relation("Payload", fields: [event_id], references: [id])
   event_id    Int   @unique
 }
 
