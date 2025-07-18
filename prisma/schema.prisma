@@ -27,8 +27,8 @@ enum EventType {
 
 model Project {
   id         Int      @id @default(autoincrement())
-  name       String   @unique
-  repository String   @unique
+  name       String
+  repository String
   events     Event[]
   tickets    Ticket[]
 }

@@ -15,8 +15,8 @@ app.get("/", (_req: Request, res: Response) => {
 
 
 app.post("/webhook/gitlab", async (req: Request, res: Response) => {
-
-  const webhook = GitlabWeebhook(req.body);
+ 
+  const webhook = GitlabWeebhook(req);
 
   const isSuccess = await webhook.save();
 

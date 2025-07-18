@@ -21,14 +21,19 @@ export const GithubWebhook = async (req: Request, res: Response) => {
 
     const repo = payload.repository;
     const username = payload.pusher?.name;
-    const project = await prisma.project.upsert({
+
+    let project = await prisma.project.findFirst({
       where: { repository: repo.full_name },
-      update: {},
-      create: {
-        name: repo.name,
-        repository: repo.full_name,
-      },
     });
+
+    if(!project) {
+      project = await prisma.project.create({
+        data: {
+          name: repo.name,
+          repository: repo.full_name,
+        },
+      });
+    }
 
     const user = await prisma.user.upsert({
       where: { username },
@@ -144,14 +149,18 @@ const handleOpenedEvent = async (payload: any, res: Response) => {
     }
 
     // 1. Find or create the project
-    const project = await prisma.project.upsert({
+    let project = await prisma.project.findFirst({
       where: { repository: repo.full_name },
-      update: {},
-      create: {
-        name: repo.name,
-        repository: repo.full_name,
-      },
     });
+
+    if(!project) {
+      project = await prisma.project.create({
+        data: {
+          name: repo.name,
+          repository: repo.full_name,
+        },
+      });
+    }
 
     // 2. Find or create the user
     const user = await prisma.user.upsert({

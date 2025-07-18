@@ -25,7 +25,7 @@ export const resolveEntities = async (
   const ticketCodeMatch = branch.match(/([A-Z]+-\d+)/i);
   const ticketCode = ticketCodeMatch ? ticketCodeMatch[1].toUpperCase() : null;
 
-  const project = await prisma.project.findUnique({
+  const project = await prisma.project.findFirst({
     where: { repository: repo.full_name },
   });
   if (!project) throw new Error("Project not found");
