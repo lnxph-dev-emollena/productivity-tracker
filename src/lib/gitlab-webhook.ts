@@ -354,27 +354,28 @@ export const GitlabWeebhook = (request: any) => {
     const resolvedByBranch = isProjectFromBranchName();
     const repositoryFullname = getRepositoryFullName();
     let repositoryName = getRepositoryName();
+    let condition: { repository?: string, name?: string } = {
+      repository: repositoryFullname
+    };
 
     if (resolvedByBranch) {
       repositoryName = getTargetBranch();
-      // Find or create project
-      const existingProject = await prisma.project.findFirst({
-        where: {
-          repository: repositoryFullname,
-          name: repositoryName,
-        },
-      });
-
-      if (existingProject)
-        return existingProject;
+      condition = {
+        repository: repositoryFullname,
+        name: repositoryName,
+      };
     }
 
-    return await prisma.project.upsert({
-      where: {
-        repository_name: { repository: repositoryFullname, name: repositoryName },
-      },
-      update: {},
-      create: {
+    // Find or create project
+    const existingProject = await prisma.project.findFirst({
+      where: condition,
+    });
+
+    if (existingProject)
+      return existingProject;
+
+    return await prisma.project.create({
+      data: {
         name: repositoryName,
         repository: repositoryFullname,
       },
@@ -454,7 +455,7 @@ export const GitlabWeebhook = (request: any) => {
 
     return mergeRequest;
   }
-
+  
 
   function getBranchName() {
     let branch = null;
@@ -578,10 +579,14 @@ export const GitlabWeebhook = (request: any) => {
     const username = getUsername();
     const ticketCode = getTicketName();
     const repositoryName = getRepositoryFullName();
+    const resolvedProjectByBranch = isProjectFromBranchName();
+    let condition: any = { repository: repositoryName };
 
-    const project = await prisma.project.findUnique({
-      where: { repository: repositoryName },
-    });
+    if (resolvedProjectByBranch) {
+      condition = { repository: repositoryName, name: getTargetBranch() };
+    }
+
+    const project = await prisma.project.findFirst(condition);
 
     if (!project) throw new Error("Project not found");
 
